@@ -9,6 +9,9 @@ use Hash;
 use Illuminate\Support\Facades\Auth;
 use Intervention\Image\ImageManagerStatic as Image;
 use App\Chat;
+use App\Events\SendMessageEvent;
+use App\Message;
+use Illuminate\Support\Facades\Validator;
 
 class HomeController extends Controller
 {
@@ -80,5 +83,34 @@ class HomeController extends Controller
     public function chat(Request $request) {
         $chats =  Chat::where('starter_id', auth()->id())->orWhere('user_id', auth()->id())->latest()->get();
         return view('site.message', compact('chats'));
+    }
+    public function send_message(Request $request) {
+        $validator = Validator::make($request->all(), [ 
+            'id'        => ['required', 'exists:chats,id'],
+            'message'   => ['required', 'string', 'max:6000'],
+        ]);
+        if ($validator->fails()) { 
+            return response()->json(['errors' =>$validator->errors(), 'status' => 'error'], 401);            
+        }
+        $message            = new Message;
+        $message->sender_id = Auth::id();
+        $message->chat_id   = $request->id;
+        $message->message   = $request->message;
+        $message->save();
+        $chat               = Chat::findOrFail($request->id);
+        $receiver           = $chat->starter_id;
+        if(Auth::id() == $chat->starter_id)
+            $receiver       = $chat->user_id;
+        event(new SendMessageEvent($message, $receiver, $message->sender()->firstOrFail()));
+        return response()->json(['data' => $message, 'status' => 'success']);            
+    }
+    public function get_chat_messages(Request $request) {
+        $validator = Validator::make($request->all(), [ 
+            'id'        => ['required', 'exists:chats,id'],
+        ]);
+        if ($validator->fails()) { 
+            return response()->json(['errors' =>$validator->errors(), 'status' => 'error'], 401);            
+        }
+        return response()->json(['data' => Chat::findOrFail($request->id)->messages()->get(), 'status' => 'success']);                    
     }
 }

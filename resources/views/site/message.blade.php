@@ -302,34 +302,22 @@
                                         } else {
                                             $user = \App\User::where('id', $chat->starter_id)->firstOrFail();
                                         }
-                                        if($loop->first) {
-                                            $first_chat = $chat;
+                                        if(request()->input('id') == $chat->id) {
+                                            $activeChat = \App\Chat::find($chat->id);
+                                        } elseif($loop->first) {
+                                            $activeChat = \App\Chat::find($chat->id);
                                         }
                                     @endphp
-                                <li class="user" id="1">
-                                        <span class="pending"></span>        
+                                <li class="user @if(request()->input('id') == $chat->id) active @endif" data-id="{{ $chat->id }}" id="chat_{{ $chat->id }}" >
+                                    <span class="pending"></span>        
                                     <div class="media">
                                         <div class="media-left">
-                                            <img src="c.jpg" alt="" class="media-object">
+                                            <img src="{{ $is_starter ? route('image_show', $user->image) : 'https://via.placeholder.com/150C/O https://placeholder.com/' }}" alt="" class="media-object">
                                         </div>
     
                                         <div class="media-body">
-                                            <p class="name">name</p>
-                                            <p class="email">email</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="user" id="1">
-                                 
-                                        <span class="pending"></span>        
-                                    <div class="media">
-                                        <div class="media-left">
-                                            <img src="c.jpg" alt="" class="media-object">
-                                        </div>
-    
-                                        <div class="media-body">
-                                            <p class="name">name</p>
-                                            <p class="email">email</p>
+                                            <p class="name">{{ $is_starter ? $user->name : 'unknown' }}</p>
+                                            <p class="email">{{ $is_starter ? $user->email : 'unknown' }}</p>
                                         </div>
                                     </div>
                                 </li>
@@ -338,24 +326,23 @@
                         </div>
                     </div>
                    
-                    <div class="col-md-8" id="messages">
+                    <div class="col-md-8">
                         <div class="message-wrapper">
-                        @if(isset($first_chat))
-                            <ul class="messages">
-                            @foreach($first_chat->messages()->oldest()->get() as $message)
-                                <li class="message clearfix">
-                                    <div class="{{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
-                                        <p>{{ $message->message }}</p>
-                                        <p class="date">{{ $message->created_at }}</p>
-    
-                                    </div>
-                                </li>
-                            @endforeach
-                            </ul>
+                            <ul class="messages" id="messages">
+                            @if(isset($activeChat))
+                                @foreach($activeChat->messages()->oldest()->get() as $message)
+                                    <li class="message clearfix">
+                                        <div class="{{ $message->sender_id == auth()->id() ? 'sent' : 'received' }}">
+                                            <p>{{ $message->message }}</p>
+                                            <p class="date">{{ $message->created_at }}</p>
+                                        </div>
+                                    </li>
+                                @endforeach
                             @endif
+                            </ul>
                         </div>
                         <div class="input-text">
-                            <input type="text" name="message" class="submit">
+                            <input type="text" name="message" class="submit" id="send_message">
                         </div>
                     </div>
                 </div>
@@ -508,8 +495,72 @@
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>
+        window.Laravel = {!! json_encode([
+            'user' => auth()->check() ? auth()->user()->id : null,
+        ]) !!};
+    </script>
+    <script src="{{ asset('js/app.js') }}"></script>
+    <script>    
+        $(document).ready(function () {
+            var active = $('.users .active').attr('data-id');
+            if(!active)  {
+                $('.users .user:first').addClass('active');
+            }
+            function append_message (type, message, date) {
+                $('#messages').append(`
+                <li class="message clearfix">
+                    <div class="${type == 'user'  ? 'sent' : 'received'}">
+                        <p>${message}</p>
+                        <p class="date">${ date ? date : '' }</p>
+                    </div>
+                </li>
+                `);
+            }
+            $('.users .user').click(function () {
+                $('.users .active').removeClass('active');
+                $(this).addClass('active');
+                var id = $(this).attr('data-id');
+                var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
+                var action = "{{ route('get_chat_messages') }}";
+                $.ajax({
+                    url:  action,
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: {_token: CSRF_TOKEN, id: id},
+                    success: function(data, status){
+                        console.log(data.data)
+                        $('#messages').empty();
+                        var i;
+                        for(i = 0 ; i < data.data.length; i++) {
+                            var type = data.data[i].sender_id == "{{ Auth::id() }}" ? 'user' : 'receiver';
+                            append_message(type, data.data[i].message, data.data[i].created_at);
+                        }
+                    }
+                }); 
+            });
+            $('#send_message').on('keypress',function(e) {
+                if(e.which == 13) {
+                    var id          = $('.users .active').attr('data-id');
+                    console.log(id)
+                    var message     = $('#send_message').val();
+                    var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
+                    var action = "{{ route('send_message') }}";
+                    $.ajax({
+                        url:  action,
+                        type: 'POST',
+                        dataType: 'JSON',
+                        data: {_token: CSRF_TOKEN, id: id, message: message},
+                        success: function(data, status){
+                            if(data) {
+                                append_message('user', data.data.message, data.data.created_at);
+                                $('#send_message').val('');
+                            }
+                        }
+                    }); 
+                }
+            });
+        });
+    </script>
   </body>
 </html>

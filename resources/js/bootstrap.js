@@ -49,8 +49,28 @@ if (token) {
 // window.Pusher = require('pusher-js');
 
 // window.Echo = new Echo({
-//     broadcaster: 'pusher',
-//     key: process.env.MIX_PUSHER_APP_KEY,
-//     cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-//     encrypted: true
+    // broadcaster: 'pusher',
+    // key: process.env.MIX_PUSHER_APP_KEY,
+    // cluster: process.env.MIX_PUSHER_APP_CLUSTER,
+    // encrypted: true
 // });
+import Echo from "laravel-echo";
+window.Pusher = require('pusher-js');
+window.Pusher.logToConsole = true;
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: 'ba4782937d43574101b9',
+    cluster: 'eu',
+});
+
+window.Echo.private('user.' + window.Laravel.user)
+.listen('SendMessageEvent', (e) => {
+    $('#messages').append(`
+        <li class="message clearfix">
+            <div class="received">
+                <p>${e.message}</p>
+                <p class="date">${ e.created_at.date }</p>
+            </div>
+        </li>
+        `);
+    })
