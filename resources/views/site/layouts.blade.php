@@ -37,7 +37,7 @@
                     <a class="nav-link white" href="{{ route('chat') }}">Messages</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link white" href="{{ route('login') }}">The nearest</a>
+                    <a class="nav-link white" href="">The nearest</a>
                 </li>
                
                 @if(auth()->check())

@@ -50,11 +50,7 @@ class HomeController extends Controller
         $users  = User::where('name', 'LIKE', '%'. $request->s. '%')->where('id', '!=', auth()->id())->get();
         return view('site.search', compact('users'));
     }
-        public function regesteruser()
-    {
-        return view('site.register');
-
-    }
+    
     public function home()
     {
         return view('site.home');

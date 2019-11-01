@@ -17,6 +17,12 @@ class UserController extends Controller
     }
 
 //register
+
+    public function regesteruser()
+    {
+        return view('site.register');
+
+    }
     public function register(Request $request){
         $request->validate([
             'name'     => 'required|string',
