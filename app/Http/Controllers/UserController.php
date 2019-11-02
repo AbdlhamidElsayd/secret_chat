@@ -28,7 +28,7 @@ class UserController extends Controller
             'name'     => 'required|string',
             'phone'     => 'required|string',
             'email'     =>'required|string|email|max:255|unique:users' ,
-            'image'     => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
+            'image'     => 'required|image|mimes:jpeg,png,jpg,gif,svg',
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
 
@@ -37,12 +37,13 @@ class UserController extends Controller
         $user->phone         = $request->phone;
         $user->email        = $request->email;
 
-        if($request->hasFile('image'))
+        if($request->hasFile('image')){
         $image = $request->image;
         $filename  = mt_rand(1000, 10000).time().uniqid().'.'.$image->getClientOriginalExtension();
         $path = storage_path('app/public/' . $filename);
         Image::make($image->getRealPath())->resize(100, 100)->save($path);
         $user->image        =$filename;
+        }
         
         $user->password     = bcrypt($request->password);
         $user->save();

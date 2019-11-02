@@ -13,13 +13,22 @@
 
 
     @import url('https://fonts.googleapis.com/css?family=Work+Sans:400,600');
-
-
-    .container {
-        margin-top:0px;
-        width: 80%;
-        margin: 0 auto;
+    .modal-body form{
+        position: relative
     }
+    
+    
+    @media screen and (min-width: 1024px){
+        .modal-body input{
+            width:765px; 
+        }
+    }
+    @media screen and (max-width: 639px){
+        .modal-body input{
+            width:550px; 
+        }
+    }
+      
 
     .navbar {
         
@@ -121,7 +130,7 @@
             }
 
             .user-wrapper {
-                height: 600px;
+                height: 555px;
             }
 
             .user {
@@ -168,7 +177,7 @@
 
             .message-wrapper {
                 padding: 10px;
-                height: 536px;
+                height: 490px;
                 background: #eeeeee;
             }
 
@@ -309,7 +318,9 @@
                                         }
                                     @endphp
                                 <li class="user @if(request()->input('id') == $chat->id) active @endif" data-id="{{ $chat->id }}" id="chat_{{ $chat->id }}" >
-                                    <span class="pending"></span>        
+                                    @if($user->unread)
+                                    <span class="pending"></span> 
+                                    @endif       
                                     <div class="media">
                                         <div class="media-left">
                                             <img src="{{ $is_starter ? route('image_show', $user->image) : 'https://via.placeholder.com/150C/O https://placeholder.com/' }}" alt="" class="media-object">
@@ -561,6 +572,23 @@
                 }
             });
         });
+    </script>
+     <script>
+        function showImage(src,target) {
+            var fr=new FileReader();
+            fr.onload = function(e) { target.src = this.result; };
+            src.addEventListener("change",function() {
+                fr.readAsDataURL(src.files[0]);
+            });
+        }
+
+        var src = document.getElementById("input_id");
+        var target = document.getElementById("image");
+        showImage(src,target);
+
+        var sr = document.getElementById("sr");
+        var targe = document.getElementById("targe");
+        showImage(sr,targe);
     </script>
   </body>
 </html>
