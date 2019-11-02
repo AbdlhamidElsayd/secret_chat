@@ -113,4 +113,11 @@ class HomeController extends Controller
         }
         return response()->json(['data' => Chat::findOrFail($request->id)->messages()->get(), 'status' => 'success']);                    
     }
+
+    public function nearest() {
+        return view('site.nearest');
+    }
+    public function nearest_post(Request $request) {
+        return User::findNearest($request->lat, $request->lng, auth()->id());
+    }
 }

@@ -55,6 +55,7 @@ if (token) {
     // encrypted: true
 // });
 import Echo from "laravel-echo";
+import PNotify from 'pnotify/dist/es/PNotify';
 window.Pusher = require('pusher-js');
 window.Pusher.logToConsole = true;
 window.Echo = new Echo({
@@ -65,6 +66,24 @@ window.Echo = new Echo({
 
 window.Echo.private('user.' + window.Laravel.user)
 .listen('SendMessageEvent', (e) => {
+    var notice = PNotify.notice({
+        title: e.message,
+        text: `${e.name} sent message`,
+        modules: {
+            Desktop: {
+                desktop: false,
+                icon: false
+            }
+        }
+    });
+    notice.refs.elem.style.cursor = 'pointer';
+    let url = e.url;
+    notice.on('click', function (e) {
+        if ($(e.target).is('.ui-pnotify-closer *, .ui-pnotify-sticker *')) {
+            return;
+        }
+        document.location.href = url;
+    });
     $('#messages').append(`
         <li class="message clearfix">
             <div class="received">

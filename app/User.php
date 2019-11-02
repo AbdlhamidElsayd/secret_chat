@@ -43,9 +43,10 @@ class User extends Authenticatable
      use EntrustUserTrait;
 
 
-     public static function findNearest($latitude, $longitude) {
+     public static function findNearest($latitude, $longitude, $user_id) {
         $users = User::select(DB::raw('*, ( 6367 * acos( cos( radians('.$latitude.') ) * cos( radians( lat ) ) * cos( radians( lng ) - radians('.$longitude.') ) + sin( radians('.$latitude.') ) * sin( radians( lat ) ) ) ) AS distance'))
                 ->having('distance', '<', 5)
+                ->where('id', '!=', $user_id)
                 ->orderBy('distance')
                 ->get();
         return $users;

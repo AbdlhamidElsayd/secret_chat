@@ -38,6 +38,6 @@ class SendMessageEvent implements ShouldBroadcast
     }
     public function broadcastWith()
     {
-        return ['message' => $this->message->message, 'created_at' => $this->message->created_at];        
+        return ['message' => $this->message->message, 'name' => $this->notifiable_id == $this->message->chat()->firstOrFail()->starter_id ? $this->message->sender()->firstOrFail()->name : 'unknown', 'created_at' => $this->message->created_at, 'url' => route('chat', ['id' => $this->message->chat_id])];        
     }
 }

@@ -35,6 +35,9 @@ Route::group(
             Route::post('/chat/send-message', 'HomeController@send_message')->name('send_message');
             Route::post('/chat/messages', 'HomeController@get_chat_messages')->name('get_chat_messages');
             Route::get('/messages','HomeController@messages')->name('messages');
+            Route::get('/search','HomeController@search')->name('search');
+            Route::get('/nearest','HomeController@nearest')->name('nearest');
+            Route::post('/nearest','HomeController@nearest_post');
         });	
 
 
@@ -50,7 +53,6 @@ Route::group(
 
 
         Auth::routes();
-        Route::get('/search','HomeController@search')->name('search');
         Route::get('registeruser', 'UserController@regesteruser')->name('registeruser');
         Route::post('registeruser', 'UserController@register')->name('register_home');
        
