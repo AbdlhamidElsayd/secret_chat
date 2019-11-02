@@ -16,7 +16,7 @@
 <script>
     $(document).ready(function () {
         var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
-        $('.start_chat').click(function () {
+        $('#content').on("click", ".start_chat", function () {
             var id = $(this).attr('data-id');
             var action = "{{ route('start_chat') }}";
             $.ajax({
